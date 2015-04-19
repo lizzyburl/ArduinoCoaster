@@ -72,7 +72,15 @@ void loop() {
       startTime = now();
       cupIsOn = 1;
     }
-    float tempSensorReading = analogRead(mugTemperatureSensor);
+    int n = 5;
+    float tempSensorReading;
+    while(int n > 0)
+    {
+      float currentTemp = analogRead(mugTemperatureSensor);
+      tempSensorReading += currentTemp;
+      n--;
+    }
+    tempSensorReading/5.0;
     float mugVolt = (tempSensorReading * 5.0) / 1024.0;
     float mugTempF = GetTempInFFromVoltage(mugVolt);
     int elapsedTime = now() - startTime;
