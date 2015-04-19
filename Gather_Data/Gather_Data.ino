@@ -5,12 +5,12 @@ We will have to gather temperature sensor and light sensor data and write it to 
 */
 
 // Sensors
-const int lightSensorPin = 0, mugTemperatureSensor = 1, tooHotButton = 2, okButton = 3;
+const int lightSensorPin = 0, mugTemperatureSensor = 1, okButton = 2;
 
 // Output
 const int mugOnLED = 9;
 
-int lightLevel, ledVal, cupIsOn = 0, tooHot = 0;
+int lightLevel, ledVal, cupIsOn = 0, tooHot=1;
 long startTime;
 
 float temp;
@@ -18,7 +18,6 @@ float temp;
 void setup() {
   // put your setup code here, to run once:
   pinMode(mugOnLED, OUTPUT);
-  pinMode(tooHotButton, INPUT);
   pinMode(okButton, INPUT);
   Serial.begin(9600);
 }
@@ -26,7 +25,11 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   lightLevel = analogRead(lightSensorPin);
-  
+  Serial.println(digitalRead(okButton));
+  if (!digitalRead(okButton))
+  {
+     tooHot = -1; 
+  }
   // If the mug is on
   if (IsCovered())
   {
@@ -41,7 +44,7 @@ void loop() {
     float mugVolt = (tempSensorReading * 5.0) / 1024.0;
     float mugTempF = GetTempInFFromVoltage(mugVolt);
     int elapsedTime = now() - startTime;
-    WriteToCSV(mugTempF, elapsedTime);
+    WriteToCSV(mugTempF, elapsedTime, tooHot);
     // This is where we will write it to a cvs file.
   }
   else
@@ -56,8 +59,10 @@ void loop() {
   
 }
 
-void WriteToCSV(float mugTempF, int elapsedTime)
+void WriteToCSV(float mugTempF, int elapsedTime, int tooHot)
 {
+  Serial.print("Too Hot: ");
+  Serial.print(tooHot);
   Serial.print("Mug temp: ");
   Serial.print(mugTempF);
   Serial.print(" Elapsed Time: ");
