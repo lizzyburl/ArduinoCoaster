@@ -70,12 +70,12 @@ void loop() {
 
 void WriteToCSV(float mugTempF, int elapsedTime, int tooHot)
 {
-  Serial.print("Too Hot: ");
   Serial.print(tooHot);
-  Serial.print("Mug temp: ");
+  Serial.print(",");
   Serial.print(mugTempF);
-  Serial.print(" Elapsed Time: ");
+  Serial.print(",");
   Serial.println(elapsedTime);
+  delay(150);
 }
 
 
