@@ -5,8 +5,8 @@ We will have to gather temperature sensor and light sensor data and write it to 
 */
 
 // Sensors
-const int lightSensorPin = 0, mugTemperatureSensor = 1, okButton = 2;
-
+const int lightSensorPin = 0, mugTemperatureSensor = 1;
+const int okButton = 2, speakerPin = 8;
 // Output
 const int mugOnLED = 9;
 
@@ -14,6 +14,9 @@ int lightLevel, ledVal, cupIsOn = 0, tooHot=1;
 long startTime;
 
 float temp;
+//define the tones to play with the buzzer 
+const int tones[] = {440, 415}; // A, G#
+const int numTones = 2;
 
 void setup() {
   // put your setup code here, to run once:
@@ -49,11 +52,17 @@ void loop() {
   }
   else
   {
+    // not covered and was previously covered
+    if(cupIsOn) // TODO: && if temperature is too hot, play tone
+    {
+      PlayTone();
+    }
     ledVal = 0;
     if (cupIsOn)
     {
       cupIsOn = 0;
     }
+    
   }
   delay(1000);
   
@@ -84,4 +93,14 @@ int IsCovered()
   return 1;
 }
  return 0; 
+}
+
+void PlayTone()
+{
+  for (int i = 0; i < numTones; i++)
+  {
+    tone(speakerPin, tones[i]);
+    delay(150);
+  }
+  noTone(speakerPin);
 }
