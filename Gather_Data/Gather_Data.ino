@@ -19,8 +19,9 @@ const int LEDoff = 0;
 
 int lightLevel, ledVal, cupIsOn = 0, tooHot=1;
 long startTime;
+boolean tooHot = true;
 
-float temp;
+float temp, prevTemp;
 //define the tones to play with the buzzer 
 const int tones[] = {440, 415}; // A, G#
 const int numTones = 2;
@@ -74,23 +75,37 @@ void loop() {
     }
     int n = 5;
     float tempSensorReading;
-    while(int n > 0)
+    while(n > 0)
     {
       float currentTemp = analogRead(mugTemperatureSensor);
       tempSensorReading += currentTemp;
       n--;
     }
-    tempSensorReading/5.0;
+    tempSensorReading/=5.0;
+    float dy = tempSensorReading - prevTemp;
     float mugVolt = (tempSensorReading * 5.0) / 1024.0;
     float mugTempF = GetTempInFFromVoltage(mugVolt);
     int elapsedTime = now() - startTime;
-    WriteToCSV(mugTempF, elapsedTime, tooHot);
+    float y = 0.0102*tempSensorReading - 0.0019*elapsedTime + 0.1719*dy;
+    if(y > 1)
+    {
+      Serial.print("Too hot!");
+      tooHot = true;
+      LEDColor(LEDon, LEDoff);
+    }
+    else
+    {
+      Serial.print("Okay to drink");
+      LEDColor(LEDoff, LEDon);
+      tooHot = false;
+    }
+    //WriteToCSV(mugTempF, elapsedTime, tooHot);
     // This is where we will write it to a cvs file.
   }
   else
   {
     // not covered and was previously covered
-    if(cupIsOn) // TODO: && if temperature is too hot, play tone
+    if(cupIsOn && tooHot) // TODO: && if temperature is too hot, play tone
     {
       PlayTone();
     }
@@ -102,7 +117,7 @@ void loop() {
     
   }
   
-  
+  prevTemp = tempSensorReading;
   delay(1000);
   
 }
