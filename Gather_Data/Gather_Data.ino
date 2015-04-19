@@ -10,6 +10,12 @@ const int okButton = 2, speakerPin = 8;
 // Output
 const int mugOnLED = 9;
 
+// two-color LED constants
+const int LEDOrangePin = 12;
+const int LEDGreenPin = 11;
+const int LEDon = 255;
+const int LEDoff = 0;
+
 int lightLevel, ledVal, cupIsOn = 0, tooHot=1;
 long startTime;
 
@@ -23,6 +29,9 @@ void setup() {
   pinMode(mugOnLED, OUTPUT);
   pinMode(okButton, INPUT);
   Serial.begin(9600);
+  // change two-color LED to output mode
+  pinMode(greenPin, OUTPUT);
+  pinMode(orangePin, OUTPUT); 
 }
 
 void loop() {
@@ -103,4 +112,13 @@ void PlayTone()
     delay(150);
   }
   noTone(speakerPin);
+}
+
+
+// provide the status variable as 'LEDon' to turn that color on, or 'LEDoff' to turn that color off
+// ex: greenStatus = LEDon && orangeStatus = LEDoff would give a true green 
+void LEDColor(orangeStatus, greenStatus)
+{
+    analogWrite(orangePin, orangeStatus);
+    analogWrite(greenPin, greenStatus);
 }
