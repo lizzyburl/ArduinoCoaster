@@ -1,8 +1,8 @@
 #include <Time.h>
 /* 
-We will have to gather temperature sensor and light sensor data and write it to a csv file to train.
-
-*/
+ We will have to gather temperature sensor and light sensor data and write it to a csv file to train.
+ 
+ */
 
 // Sensors
 const int lightSensorPin = 0, mugTemperatureSensor = 1;
@@ -12,18 +12,21 @@ boolean buttonState, lastButtonState;
 const int mugOnLED = 9;
 
 // two-color LED constants
-const int LEDOrangePin = 12;
-const int LEDGreenPin = 11;
+const int LEDOrangePin = 11;
+const int LEDGreenPin = 12;
 const int LEDon = 255;
 const int LEDoff = 0;
 
 int lightLevel, ledVal, cupIsOn = 0, tooHot=1;
 long startTime;
-boolean tooHot = true;
+boolean tooHotToHandle = true;
 
 float temp, prevTemp;
 //define the tones to play with the buzzer 
-const int tones[] = {440, 415}; // A, G#
+const int tones[] = {
+  440, 415}; // A, G#
+const int happy_tones[] = {
+  415, 440}; // A, G#
 const int numTones = 2;
 
 void setup() {
@@ -39,11 +42,12 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   lightLevel = analogRead(lightSensorPin);
- //----- recently added 
+  //----- recently added 
   buttonState = digitalRead(okButton);
+  float tempSensorReading = 0;
 
-    // Recieve data from Node and write it to a String
-    // compare the buttonState to its previous state
+  // Recieve data from Node and write it to a String
+  // compare the buttonState to its previous state
   if (buttonState != lastButtonState) {
     // if the state has changed, increment the counter
     if (buttonState == HIGH) {
@@ -61,65 +65,70 @@ void loop() {
   Serial.println(digitalRead(okButton));
   if (!digitalRead(okButton))
   {
-     tooHot = -1; 
+    tooHot = -1; 
   }
-  // If the mug is on
-  if (IsCovered())
+  if (IsCovered()) // If the mug is on
   {
     ledVal = 255;
-    // If the mug was not previously on.
-    if (!cupIsOn)
+    if (!cupIsOn) // If the mug was not previously on.
     {
       startTime = now();
       cupIsOn = 1;
     }
-    int n = 5;
-    float tempSensorReading;
+    int n = 10;
     while(n > 0)
     {
       float currentTemp = analogRead(mugTemperatureSensor);
+      currentTemp = (currentTemp * 5.0) / 1024.0;
+      currentTemp = GetTempInFFromVoltage(currentTemp);
       tempSensorReading += currentTemp;
       n--;
+      delay(100);
     }
-    tempSensorReading/=5.0;
+    tempSensorReading/=10.0;
     float dy = tempSensorReading - prevTemp;
-    float mugVolt = (tempSensorReading * 5.0) / 1024.0;
-    float mugTempF = GetTempInFFromVoltage(mugVolt);
     int elapsedTime = now() - startTime;
-    float y = 0.0102*tempSensorReading - 0.0019*elapsedTime + 0.1719*dy;
-    if(y > 1)
+    float y = 0.008*tempSensorReading - 0.002*elapsedTime + 0.02519*dy - .61;
+    Serial.print("y is:");
+    Serial.println(y);
+        Serial.print("mugTempF is:");
+    Serial.println(tempSensorReading);
+        Serial.print("elapsedTime is:");
+    Serial.println(elapsedTime);
+        Serial.print("dy is:");
+    Serial.println(dy);
+    if(y > 0)
     {
-      Serial.print("Too hot!");
-      tooHot = true;
+      //Serial.print("Too hot!");
+      tooHotToHandle = true;
       LEDColor(LEDon, LEDoff);
     }
     else
     {
-      Serial.print("Okay to drink");
+      //Serial.print("Okay to drink");
       LEDColor(LEDoff, LEDon);
-      tooHot = false;
+      tooHotToHandle = false;
+      PlayTone(tooHotToHandle);
     }
-    //WriteToCSV(mugTempF, elapsedTime, tooHot);
-    // This is where we will write it to a cvs file.
   }
   else
   {
-    // not covered and was previously covered
-    if(cupIsOn && tooHot) // TODO: && if temperature is too hot, play tone
+    if(cupIsOn && tooHotToHandle) // not covered and was previously covered
     {
-      PlayTone();
+      PlayTone(tooHotToHandle);
     }
     ledVal = 0;
+    LEDColor(LEDoff, LEDoff);
     if (cupIsOn)
     {
       cupIsOn = 0;
     }
-    
+
   }
-  
+
   prevTemp = tempSensorReading;
   delay(1000);
-  
+
 }
 
 void WriteToCSV(float mugTempF, int elapsedTime, int tooHot)
@@ -135,25 +144,27 @@ void WriteToCSV(float mugTempF, int elapsedTime, int tooHot)
 
 float GetTempInFFromVoltage(float voltage)
 {
-  // 100 * 9 / 5
   return ((voltage - 0.5) * 180.0) + 32.00;
 }
 
-// If the mug is on the coaster
-int IsCovered()
+int IsCovered() // If the mug is on the coaster
 {
- if (lightLevel >200)
-{
-  return 1;
-}
- return 0; 
+  if (lightLevel >200)
+  {
+    return 1;
+  }
+  return 0; 
 }
 
-void PlayTone()
+void PlayTone(boolean tooHot)
 {
   for (int i = 0; i < numTones; i++)
   {
-    tone(speakerPin, tones[i]);
+    if (tooHot) {
+      tone(speakerPin, tones[i]);
+    } else {
+      tone(speakerPin, happy_tones[i]);
+    }
     delay(150);
   }
   noTone(speakerPin);
@@ -164,6 +175,7 @@ void PlayTone()
 // ex: greenStatus = LEDon && orangeStatus = LEDoff would give a true green 
 void LEDColor(int orangeStatus, int greenStatus)
 {
-    analogWrite(LEDOrangePin, orangeStatus);
-    analogWrite(LEDGreenPin, greenStatus);
+  analogWrite(LEDOrangePin, orangeStatus);
+  analogWrite(LEDGreenPin, greenStatus);
 }
+
