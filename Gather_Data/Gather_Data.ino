@@ -7,6 +7,7 @@ We will have to gather temperature sensor and light sensor data and write it to 
 // Sensors
 const int lightSensorPin = 0, mugTemperatureSensor = 1;
 const int okButton = 2, speakerPin = 8;
+boolean buttonState, lastButtonState;
 // Output
 const int mugOnLED = 9;
 
@@ -37,6 +38,25 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   lightLevel = analogRead(lightSensorPin);
+ //----- recently added 
+  buttonState = digitalRead(okButton);
+
+    // Recieve data from Node and write it to a String
+    // compare the buttonState to its previous state
+  if (buttonState != lastButtonState) {
+    // if the state has changed, increment the counter
+    if (buttonState == HIGH) {
+      // if the current state is HIGH then the button
+      // wend from off to on:
+      Serial.println("Hot");
+    } 
+    else {
+      // if the current state is LOW then the button
+      // wend from on to off:
+      Serial.println(""); 
+    } 
+  }  
+  // -----
   Serial.println(digitalRead(okButton));
   if (!digitalRead(okButton))
   {
@@ -73,6 +93,8 @@ void loop() {
     }
     
   }
+  
+  
   delay(1000);
   
 }
