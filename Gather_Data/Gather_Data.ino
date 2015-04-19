@@ -31,8 +31,8 @@ void setup() {
   pinMode(okButton, INPUT);
   Serial.begin(9600);
   // change two-color LED to output mode
-  pinMode(greenPin, OUTPUT);
-  pinMode(orangePin, OUTPUT); 
+  pinMode(LEDGreenPin, OUTPUT);
+  pinMode(LEDOrangePin, OUTPUT); 
 }
 
 void loop() {
@@ -139,8 +139,8 @@ void PlayTone()
 
 // provide the status variable as 'LEDon' to turn that color on, or 'LEDoff' to turn that color off
 // ex: greenStatus = LEDon && orangeStatus = LEDoff would give a true green 
-void LEDColor(orangeStatus, greenStatus)
+void LEDColor(int orangeStatus, int greenStatus)
 {
-    analogWrite(orangePin, orangeStatus);
-    analogWrite(greenPin, greenStatus);
+    analogWrite(LEDOrangePin, orangeStatus);
+    analogWrite(LEDGreenPin, greenStatus);
 }
